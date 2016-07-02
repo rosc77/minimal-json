@@ -73,6 +73,26 @@ public final class Json {
   public static final JsonValue FALSE = new JsonLiteral("false");
 
   /**
+   * Set default parsing mode.
+   */
+  public static final int JSON_MODE_DEFAULT = 0x0;
+
+  /**
+   * Set parsing mode to relaxed, allows using keys without quotes.
+   */
+  public static final int JSON_MODE_RELAXED = 0x1;
+
+  private static int parserMode = JSON_MODE_DEFAULT;
+
+  public static void setMode(int modeFlags) {
+    parserMode = modeFlags;
+  }
+
+  public static int getMode() {
+    return parserMode;
+  }
+
+  /**
    * Returns a JsonValue instance that represents the given <code>int</code> value.
    *
    * @param value

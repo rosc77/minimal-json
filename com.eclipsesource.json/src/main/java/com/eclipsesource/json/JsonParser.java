@@ -47,6 +47,7 @@ public class JsonParser {
   private StringBuilder captureBuffer;
   private int captureStart;
   private int nestingLevel;
+  private boolean relaxedMode;
 
   /*
    * |                      bufferOffset
@@ -71,6 +72,7 @@ public class JsonParser {
     }
     this.handler = (JsonHandler<Object, Object>)handler;
     handler.parser = this;
+    this.relaxedMode = ((Json.getMode() & Json.JSON_MODE_RELAXED) != 0);
   }
 
   /**
@@ -254,11 +256,22 @@ public class JsonParser {
     handler.endObject(object);
   }
 
+  private boolean isSymbolStart(int c) {
+    return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '_'));
+  }
+
+  private boolean isSymbolChar(int c) {
+    return (isSymbolStart(c) || (c >= '0' && c <= '9'));
+  }
+
   private String readName() throws IOException {
-    if (current != '"') {
+    if (current == '"') {
+      return readStringInternal();
+    } else if (relaxedMode && isSymbolStart(current)) {
+      return readSymbolInternal();
+    } else {
       throw expected("name");
     }
-    return readStringInternal();
   }
 
   private void readNull() throws IOException {
@@ -319,6 +332,15 @@ public class JsonParser {
     return string;
   }
 
+  private String readSymbolInternal() throws IOException {
+    startCapture();
+    while (isSymbolChar(current)) {
+        read();
+    }
+    String string = endCapture();
+
+    return string;
+  }
   private void readEscape() throws IOException {
     read();
     switch (current) {
